@@ -1,173 +1,183 @@
 "use client";
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import FloatingNav from "@/components/FloatingNav";
-import { X, ShoppingCart } from "lucide-react";
 
-// Sample products (could be fetched from API)
-const allProducts = Array.from({ length: 20 }).map((_, i) => ({
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { X } from "lucide-react"; // Filter removed
+
+// -----------------------------------------------------
+// DUMMY PRODUCT DATA (Replace later with real API)
+// -----------------------------------------------------
+const allProducts = Array.from({ length: 40 }).map((_, i) => ({
   id: i + 1,
-  name: `Product ${i + 1}`,
-  price: `₦${(i + 1) * 5000}`,
-  img: `/products/product${(i % 5) + 1}.jpg`,
-  description: `This is a detailed description for Product ${i + 1}.`,
+  name: `Premium Bracelet ${i + 1}`,
+  price: 14500 + i * 200,
+  image: `/products/p${(i % 6) + 1}.jpg`,
 }));
 
 export default function ShopPage() {
-  const [visibleProducts, setVisibleProducts] = useState(allProducts.slice(0, 8));
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [filter, setFilter] = useState("All");
+  const [visibleCount, setVisibleCount] = useState(12);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [quickViewProduct, setQuickViewProduct] = useState<any>(null);
 
-  <motion.h2
+  const displayedProducts = allProducts.slice(0, visibleCount);
+
+  const loadMore = () => {
+    setVisibleCount((prev) => prev + 8);
+  };
+
+  return (
+    <main className="pt-12">
+      <motion.h2
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7 }}
-        className="absolute top-8 text-sm tracking-[0.3em] uppercase text-neutral-100"
+        className="text-center text-xs md:text-sm tracking-[0.35em] uppercase text-neutral-800 mb-10"
       >
         Essentials by Derinn
       </motion.h2>
 
-  // Infinite scroll / Load More
-  const loadMore = () => {
-    const next = allProducts.slice(visibleProducts.length, visibleProducts.length + 8);
-    setVisibleProducts([...visibleProducts, ...next]);
-  };
+      <div className="w-full flex flex-col items-center text-center mt-16 mb-8">
+        <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">
+          Shop
+        </h2>
+      </div>
 
-  // Filters (just sample categories)
-  const categories = ["All", "Earrings", "Necklaces", "Bags", "Slippers", "Heels", "Croks", "Perfume", "Bracelets"];
+      {/* FILTER BUTTON REMOVED */}
 
-  // Filtered products
-  const filteredProducts =
-    filter === "All"
-      ? visibleProducts
-      : visibleProducts.filter((p) => p.name.includes(filter));
+      <div className="max-w-[1400px] mx-auto px-6 flex flex-col lg:flex-row gap-10 lg:ml-28">
+        <aside className="hidden md:block w-64 sticky top-28 h-fit border-r pr-6">
+          <h4 className="text-sm font-semibold mb-4 tracking-wide">Filters</h4>
 
-  return (
-    <main className="relative bg-[#f8f6f4] min-h-screen">
-      <FloatingNav />
+          <div className="space-y-5">
+            <div>
+              <h5 className="text-xs text-neutral-500 uppercase tracking-wide mb-2">
+                Category
+              </h5>
+              <ul className="space-y-2 text-sm">
+                <li className="hover:text-black cursor-pointer">Necklaces</li>
+                <li className="hover:text-black cursor-pointer">Bracelets</li>
+                <li className="hover:text-black cursor-pointer">Rings</li>
+                <li className="hover:text-black cursor-pointer">Watches</li>
+              </ul>
+            </div>
 
-      {/* Hero Section - displayed across all pages */}
-      <section id="hero">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center py-20 px-6"
-        >
-          <h1 className="text-4xl md:text-5xl font-bold text-neutral-900">
-            Shop Accessories
-          </h1>
-          <p className="mt-4 text-neutral-600 md:text-lg">
-            Discover our curated collection of jewelry, bags, and essentials.
-          </p>
-        </motion.div>
-      </section>
-
-      <div className="max-w-[1400px] mx-auto px-6 flex flex-col lg:flex-row gap-8">
-
-        {/* Filter / Sort Sidebar */}
-        <aside className="hidden lg:flex flex-col w-64 space-y-6 sticky top-32">
-          <h2 className="text-lg font-semibold text-neutral-900">Categories</h2>
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              className={`text-left px-4 py-2 rounded-lg transition ${
-                filter === cat ? "bg-black text-white" : "hover:bg-neutral-200"
-              }`}
-              onClick={() => setFilter(cat)}
-            >
-              {cat}
-            </button>
-          ))}
+            <div>
+              <h5 className="text-xs text-neutral-500 uppercase tracking-wide mb-2">
+                Price
+              </h5>
+              <ul className="space-y-2 text-sm">
+                <li>₦10,000 - ₦20,000</li>
+                <li>₦20,000 - ₦30,000</li>
+                <li>₦30,000 - ₦50,000</li>
+              </ul>
+            </div>
+          </div>
         </aside>
 
-        {/* Mobile Filter Dropdown */}
-        <div className="lg:hidden mb-6">
-          <select
-            className="w-full p-3 rounded-lg border border-gray-300"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          >
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
+        <section className="flex-1">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+            {displayedProducts.map((product) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+                className="group cursor-pointer"
+                onClick={() => setQuickViewProduct(product)}
+              >
+                <div className="relative rounded-lg overflow-hidden bg-neutral-100">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-44 object-cover group-hover:scale-105 transition"
+                  />
+                </div>
+                <h4 className="mt-3 text-sm font-medium">{product.name}</h4>
+                <p className="text-neutral-600 text-xs">
+                  ₦{product.price.toLocaleString()}
+                </p>
+              </motion.div>
             ))}
-          </select>
-        </div>
+          </div>
 
-        {/* Product Grid */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 flex-1">
-          {filteredProducts.map((product) => (
-            <motion.div
-              key={product.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition cursor-pointer"
-              onClick={() => setSelectedProduct(product)}
-            >
-              <div className="overflow-hidden">
-                <img
-                  src={product.img}
-                  alt={product.name}
-                  className="w-full h-64 object-cover transform hover:scale-105 transition"
-                />
-              </div>
-              <div className="p-4">
-                <h2 className="text-neutral-900 font-semibold">{product.name}</h2>
-                <p className="text-neutral-700 mt-1">{product.price}</p>
-                <button className="mt-4 w-full py-2 rounded-full bg-black text-white text-sm hover:bg-neutral-800 transition">
-                  Add to Cart
-                </button>
-              </div>
-            </motion.div>
-          ))}
+          {visibleCount < allProducts.length && (
+            <div className="flex justify-center mt-10">
+              <button
+                onClick={loadMore}
+                className="px-6 py-3 border border-black rounded-full text-sm hover:bg-black hover:text-white transition"
+              >
+                Load More
+              </button>
+            </div>
+          )}
         </section>
       </div>
 
-      {/* Load More Button */}
-      {visibleProducts.length < allProducts.length && (
-        <div className="text-center my-12">
-          <button
-            onClick={loadMore}
-            className="px-6 py-3 rounded-full bg-black text-white text-sm hover:bg-neutral-800 transition"
-          >
-            Load More
-          </button>
+      {/* MOBILE FILTER MODAL (still works if opened some other way, but hidden since button removed) */}
+      {isFilterOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex justify-center items-center">
+          <div className="bg-white w-[90%] rounded-2xl p-6 relative">
+            <button
+              onClick={() => setIsFilterOpen(false)}
+              className="absolute top-4 right-4"
+            >
+              <X size={22} />
+            </button>
+
+            <h3 className="text-lg font-semibold mb-4">Filters</h3>
+
+            <div className="space-y-6">
+              <div>
+                <h5 className="text-xs text-neutral-500 uppercase tracking-wide mb-2">
+                  Category
+                </h5>
+                <ul className="space-y-2 text-sm">
+                  <li>Necklaces</li>
+                  <li>Bracelets</li>
+                  <li>Rings</li>
+                  <li>Watches</li>
+                </ul>
+              </div>
+
+              <div>
+                <h5 className="text-xs text-neutral-500 uppercase tracking-wide mb-2">
+                  Price
+                </h5>
+                <ul className="space-y-2 text-sm">
+                  <li>₦10,000 - ₦20,000</li>
+                  <li>₦20,000 - ₦30,000</li>
+                  <li>₦30,000 - ₦50,000</li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Quick View Modal */}
-      {selectedProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="bg-white rounded-xl max-w-md w-full overflow-hidden"
-          >
-            <div className="relative">
-              <img
-                src={selectedProduct.img}
-                alt={selectedProduct.name}
-                className="w-full h-80 object-cover"
-              />
-              <button
-                className="absolute top-4 right-4 text-black"
-                onClick={() => setSelectedProduct(null)}
-              >
-                <X size={24} />
-              </button>
-            </div>
-            <div className="p-6">
-              <h2 className="text-xl font-semibold">{selectedProduct.name}</h2>
-              <p className="mt-2 text-neutral-700">{selectedProduct.price}</p>
-              <p className="mt-4 text-neutral-600">{selectedProduct.description}</p>
-              <button className="mt-6 w-full py-2 rounded-full bg-black text-white text-sm hover:bg-neutral-800 transition">
-                Add to Cart
-              </button>
-            </div>
-          </motion.div>
+      {quickViewProduct && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex justify-center items-center px-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md relative">
+            <button
+              onClick={() => setQuickViewProduct(null)}
+              className="absolute top-4 right-4"
+            >
+              <X size={22} />
+            </button>
+
+            <img
+              src={quickViewProduct.image}
+              alt={quickViewProduct.name}
+              className="w-full h-64 object-cover rounded-lg mb-5"
+            />
+
+            <h3 className="text-lg font-semibold">{quickViewProduct.name}</h3>
+            <p className="text-neutral-600 mb-2">
+              ₦{quickViewProduct.price.toLocaleString()}
+            </p>
+
+            <button className="w-full py-3 mt-4 rounded-full bg-black text-white text-sm tracking-wide">
+              Add to Cart
+            </button>
+          </div>
         </div>
       )}
     </main>

@@ -1,11 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { useEffect, useState, useRef } from "react";
 import { Home, ShoppingCart, Tag, Info, Phone } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function FloatingNav() {
-  const [activeSection, setActiveSection] = useState("home");
-
   const desktopLinks = [
     { name: "Home", href: "/", id: "home" },
     { name: "Shop", href: "/shop", id: "shop" },
@@ -22,47 +21,100 @@ export default function FloatingNav() {
     { icon: <Phone size={24} />, href: "/contact", id: "contact" },
   ];
 
-  const logos = [
-    "/logos/logo1.png",
-    "/logos/logo2.png",
-    "/logos/logo3.png",
-  ];
-  const [logo, setLogo] = useState("");
+  const logos = ["/logos/logo1.png", "/logos/logo2.png", "/logos/logo3.png"];
+  const [logoIndex, setLogoIndex] = useState(0);
+  const [activeSection, setActiveSection] = useState("home");
+  const [scrollDir, setScrollDir] = useState<"up" | "down">("up");
+  const lastScrollY = useRef(0);
 
+  // Change logo every 10s
   useEffect(() => {
-    setLogo(logos[Math.floor(Math.random() * logos.length)]);
+    const interval = setInterval(() => {
+      setLogoIndex((prev) => (prev + 1) % logos.length);
+    }, 10000);
+    return () => clearInterval(interval);
   }, []);
+
+  // Scroll direction + active section
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+      setScrollDir(currentY > lastScrollY.current ? "down" : "up");
+      lastScrollY.current = currentY;
+
+      // Active section logic
+      let currentSection = "home";
+      const sections = desktopLinks.map((link) => document.getElementById(link.id));
+      sections.forEach((sec) => {
+        if (sec && window.scrollY + 100 >= sec.offsetTop) {
+          currentSection = sec.id;
+        }
+      });
+      setActiveSection(currentSection);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Magnetic hover effect
+  const handleMouseMove = (e: React.MouseEvent, ref: HTMLAnchorElement) => {
+    const rect = ref.getBoundingClientRect();
+    const x = (e.clientX - rect.left - rect.width / 2) / 4;
+    const y = (e.clientY - rect.top - rect.height / 2) / 4;
+    ref.style.transform = `translate(${x}px, ${y}px)`;
+  };
+
+  const handleMouseLeave = (ref: HTMLAnchorElement) => {
+    ref.style.transform = `translate(0px,0px)`;
+  };
 
   return (
     <>
       {/* Desktop Nav */}
-      <nav className="hidden md:flex fixed left-4 top-1/2 -translate-y-1/2 flex-col items-start z-50 space-y-6">
-
-        {/* Random Logo */}
-        <motion.img
-          src={logo}
-          className="w-16 h-auto opacity-90"
-          initial={{ opacity: 0, x: -30 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-        />
+      <nav
+        className={`hidden md:flex fixed left-4 top-1/2 -translate-y-1/2 flex-col items-start z-50 space-y-6 transition-transform duration-300 ${
+          scrollDir === "down" ? "-translate-x-20 opacity-0" : "translate-x-0 opacity-100"
+        }`}
+      >
+        {/* Logo */}
+        <div className="w-16 h-16 relative drop-shadow-lg">
+          <AnimatePresence mode="wait">
+            <motion.img
+              key={logos[logoIndex]}
+              src={logos[logoIndex]}
+              className="absolute w-16 h-auto top-0 left-0 mix-blend-screen"
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              transition={{ duration: 0.6 }}
+            />
+          </AnimatePresence>
+        </div>
 
         {/* Links */}
         <ul className="flex flex-col gap-4 mt-6">
           {desktopLinks.map((link) => (
             <motion.li
               key={link.name}
-              initial={{ x: -30, opacity: 0 }}
+              initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               whileHover={{ x: 3 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.35 }}
             >
               <a
                 href={link.href}
-                className={`uppercase tracking-wide text-sm transition ${
+                id={link.id}
+                ref={(el) => {
+                  if (el) {
+                    el.onmousemove = (e) => handleMouseMove(e as any, el);
+                    el.onmouseleave = () => handleMouseLeave(el);
+                  }
+                }}
+                className={`uppercase tracking-wide text-sm font-bold transition-colors duration-200 ${
                   activeSection === link.id
-                    ? "text-black font-bold"
-                    : "text-gray-500 hover:text-black"
+                    ? "text-[#3B5F36]"
+                    : "text-[#1C3B1C] hover:text-[#6BAF6B]"
                 }`}
               >
                 {link.name}
@@ -71,7 +123,10 @@ export default function FloatingNav() {
           ))}
         </ul>
 
-        <ShoppingCart size={26} className="text-black mt-8" />
+        <ShoppingCart
+          size={26}
+          className="text-[#1C3B1C] mt-8 drop-shadow-md hover:scale-110 transition-transform duration-200"
+        />
       </nav>
 
       {/* Mobile Nav */}
@@ -80,8 +135,8 @@ export default function FloatingNav() {
           <motion.a
             key={idx}
             href={link.href}
-            whileHover={{ scale: 1.1 }}
-            className="text-gray-700"
+            whileHover={{ scale: 1.2 }}
+            className="text-[#1C3B1C]"
           >
             {link.icon}
           </motion.a>
