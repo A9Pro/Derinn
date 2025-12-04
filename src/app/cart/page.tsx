@@ -3,10 +3,11 @@
 import { useState } from "react";
 import FloatingNav from "@/components/FloatingNav";
 import { motion } from "framer-motion";
+import { CartItem } from "@/types";
 import Link from "next/link";
 
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]); 
   const [savedCode, setSavedCode] = useState("");
 
   return (
@@ -127,7 +128,7 @@ function EmptyCart() {
 /* --------------------------------------
    CART ITEM CARD
 --------------------------------------- */
-function CartItemCard({ item }) {
+function CartItemCard({ item }: { item: CartItem }) {
   return (
     <motion.div
       whileHover={{ scale: 1.01 }}
@@ -149,7 +150,7 @@ function CartItemCard({ item }) {
           <button className="px-2 py-1 border border-neutral-300 rounded-lg text-xs">
             -
           </button>
-          <span className="text-sm">1</span>
+          <span className="text-sm">{item.quantity || 1}</span>
           <button className="px-2 py-1 border border-neutral-300 rounded-lg text-xs">
             +
           </button>
