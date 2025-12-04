@@ -1,4 +1,3 @@
-// src/app/cart/page.tsx
 "use client";
 import { useState } from "react";
 import { useCart } from "@/components/cart/CartContext";
