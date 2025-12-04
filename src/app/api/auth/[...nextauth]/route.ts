@@ -1,8 +1,15 @@
-// Force Node runtime because we need server-side modules
 export const runtime = "nodejs";
 
-import NextAuth from "next-auth";
+import NextAuth, { type NextAuthOptions, type User, type JWT } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+
+interface UserType extends User {
+  id: string;
+}
+
+interface TokenType extends JWT {
+  id?: string;
+}
 
 const users = [
   {
@@ -12,7 +19,7 @@ const users = [
   },
 ];
 
-export const authOptions = {
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -24,10 +31,9 @@ export const authOptions = {
         const user = users.find((u) => u.username === credentials?.username);
         if (!user) return null;
 
-        // simple password check
         if (credentials?.password !== user.password) return null;
 
-        return { id: user.id, name: user.username };
+        return { id: user.id, name: user.username } as UserType;
       },
     }),
   ],
@@ -36,11 +42,11 @@ export const authOptions = {
     signIn: "/admin/login",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: TokenType; user?: UserType }) {
       if (user) token.id = user.id;
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token }: { session: any; token: TokenType }) {
       if (token) session.user.id = token.id;
       return session;
     },
