@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { useCart } from "@/components/cart/CartContext";
 import FloatingNav from "@/components/FloatingNav";
 import { motion } from "framer-motion";
 
