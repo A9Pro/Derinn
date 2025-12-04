@@ -1,7 +1,13 @@
-import { getServerSession, type NextAuthOptions } from "next-auth";
+import { getServerSession, type NextAuthOptions, type Session } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
-// Make sure authOptions is properly typed
+interface UserType {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -19,24 +25,24 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   session: {
-    strategy: "jwt", // ✅ Must be typed correctly for NextAuth v5
+    strategy: "jwt",
   },
   pages: {
     signIn: "/admin/login",
   },
   callbacks: {
     async jwt({ token, user }) {
-      if (user) token.user = user;
+      if (user) token.user = user as UserType; // ✅ explicitly type user
       return token;
     },
     async session({ session, token }) {
-      session.user = token.user;
+      // ✅ type assertion so TS knows token.user is UserType
+      (session.user as UserType) = token.user as UserType;
       return session;
     },
   },
 };
 
-// Properly typed getAdminSession
 export async function getAdminSession() {
   const session = await getServerSession(authOptions);
   if (!session) throw new Error("Unauthorized");
