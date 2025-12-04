@@ -1,7 +1,7 @@
 "use client";
 
-import { signIn } from "next-auth/react";
 import { useState } from "react";
+import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export default function AdminLogin() {
@@ -12,6 +12,7 @@ export default function AdminLogin() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     const res = await signIn("credentials", {
       redirect: false,
       username,
@@ -26,31 +27,25 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-sm flex flex-col gap-4"
-      >
-        <h1 className="text-2xl font-bold text-green-800 text-center mb-4">Admin Login</h1>
-        {error && <p className="text-red-600">{error}</p>}
-
+    <div style={{ maxWidth: 400, margin: "50px auto" }}>
+      <h1>Admin Login</h1>
+      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <input
           type="text"
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="border rounded-md px-3 py-2 focus:ring-2 focus:ring-green-600 focus:outline-none"
+          required
         />
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="border rounded-md px-3 py-2 focus:ring-2 focus:ring-green-600 focus:outline-none"
+          required
         />
-        <button className="bg-green-700 hover:bg-green-800 text-white py-2 rounded-md font-bold transition">
-          Sign In
-        </button>
+        <button type="submit">Login</button>
+        {error && <p style={{ color: "red" }}>{error}</p>}
       </form>
     </div>
   );

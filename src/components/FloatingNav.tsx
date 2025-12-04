@@ -1,10 +1,18 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { Home, ShoppingCart, Tag, Info, Phone } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function FloatingNav() {
+  const pathname = usePathname();
+  
+  // Hide FloatingNav on admin pages
+  if (pathname.startsWith('/admin')) {
+    return null;
+  }
+
   const desktopLinks = [
     { name: "Home", href: "/", id: "home" },
     { name: "Shop", href: "/shop", id: "shop" },

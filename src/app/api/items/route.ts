@@ -1,34 +1,27 @@
-// src/app/api/items/route.ts
-import fs from "fs";
-import path from "path";
-import formidable from "formidable";
+import NextAuth from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 
-export const runtime = "edge"; // if using Next.js 16+ App Router
-
-export const POST = async (req: Request) => {
-  const form = new formidable.IncomingForm();
-  form.uploadDir = path.join(process.cwd(), "/public/uploads");
-  form.keepExtensions = true;
-
-  return new Promise((resolve) => {
-    form.parse(req, (err, fields, files) => {
-      if (err) return resolve(new Response(JSON.stringify({ message: "Upload failed" }), { status: 500 }));
-
-      const ITEMS_JSON = path.join(process.cwd(), "items.json");
-      const items = fs.existsSync(ITEMS_JSON) ? JSON.parse(fs.readFileSync(ITEMS_JSON, "utf-8")) : [];
-
-      const newItem = {
-        name: fields.name,
-        description: fields.description,
-        price: fields.price,
-        category: fields.category, // <-- store category
-        image: (files.file as any).newFilename,
-      };
-
-      items.push(newItem);
-      fs.writeFileSync(ITEMS_JSON, JSON.stringify(items, null, 2));
-
-      resolve(new Response(JSON.stringify({ message: "Item uploaded successfully" })));
-    });
-  });
+export const authOptions = {
+  providers: [
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        username: { label: "Username", type: "text" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (credentials?.username === "admin" && credentials?.password === "password") {
+          return { id: "1", name: "Admin" };
+        }
+        return null;
+      },
+    }),
+  ],
+  session: {
+    strategy: "jwt",
+  },
+  secret: process.env.NEXTAUTH_SECRET,
 };
+
+const handler = NextAuth(authOptions);
+export { handler as GET, handler as POST };

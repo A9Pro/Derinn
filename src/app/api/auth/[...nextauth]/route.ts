@@ -1,12 +1,14 @@
+// Force Node runtime because we need server-side modules
+export const runtime = "nodejs";
+
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
-// Admin credentials
 const users = [
   {
     id: "1",
     username: "admin",
-    password: "admin310", // plain text for testing/dev
+    password: "admin310", // plain text password for testing
   },
 ];
 
@@ -16,15 +18,14 @@ export const authOptions = {
       name: "Credentials",
       credentials: {
         username: { label: "Username", type: "text", placeholder: "admin" },
-        password: { label: "Password", type: "password" },
+        password: { label: "Password", type: "password", placeholder: "admin310" },
       },
       async authorize(credentials) {
         const user = users.find((u) => u.username === credentials?.username);
         if (!user) return null;
 
-        // Plain text comparison
-        const isValid = credentials!.password === user.password;
-        if (!isValid) return null;
+        // simple password check
+        if (credentials?.password !== user.password) return null;
 
         return { id: user.id, name: user.username };
       },
@@ -32,7 +33,7 @@ export const authOptions = {
   ],
   session: { strategy: "jwt" },
   pages: {
-    signIn: "/admin/login", // redirect here if not logged in
+    signIn: "/admin/login",
   },
   callbacks: {
     async jwt({ token, user }) {
