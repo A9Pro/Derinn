@@ -1,21 +1,22 @@
 export const runtime = "nodejs";
 
-import NextAuth, { type NextAuthOptions, type User, type JWT } from "next-auth";
+import NextAuth, { type NextAuthOptions, type User } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+
+interface TokenType {
+  id?: string;
+  [key: string]: any;
+}
 
 interface UserType extends User {
   id: string;
-}
-
-interface TokenType extends JWT {
-  id?: string;
 }
 
 const users = [
   {
     id: "1",
     username: "admin",
-    password: "admin310", // plain text password for testing
+    password: "admin310",
   },
 ];
 
@@ -30,7 +31,6 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         const user = users.find((u) => u.username === credentials?.username);
         if (!user) return null;
-
         if (credentials?.password !== user.password) return null;
 
         return { id: user.id, name: user.username } as UserType;
@@ -38,9 +38,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   session: { strategy: "jwt" },
-  pages: {
-    signIn: "/admin/login",
-  },
+  pages: { signIn: "/admin/login" },
   callbacks: {
     async jwt({ token, user }: { token: TokenType; user?: UserType }) {
       if (user) token.id = user.id;
