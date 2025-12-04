@@ -8,28 +8,8 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function FloatingNav() {
   const pathname = usePathname();
 
-  // Hide nav on admin pages
+  // Hide FloatingNav on admin pages
   if (pathname.startsWith("/admin")) return null;
-
-  const [cartCount, setCartCount] = useState(0);
-
-  // Fetch cart count
-  useEffect(() => {
-    async function loadCartCount() {
-      try {
-        const res = await fetch("/api/cart/count", { cache: "no-store" });
-        const data = await res.json();
-        setCartCount(data.count || 0);
-      } catch (err) {
-        console.error("Cart count error:", err);
-      }
-    }
-    loadCartCount();
-
-    // Poll every 15s in case user adds items on another component
-    const interval = setInterval(loadCartCount, 15000);
-    return () => clearInterval(interval);
-  }, []);
 
   const desktopLinks = [
     { name: "Home", href: "/", id: "home" },
@@ -42,7 +22,7 @@ export default function FloatingNav() {
   const mobileLinks = [
     { icon: <Home size={24} />, href: "/", id: "home" },
     { icon: <Tag size={24} />, href: "/shop", id: "shop" },
-    { icon: <ShoppingCart size={24} />, href: "/cart", id: "cart" },
+    { icon: <ShoppingCart size={24} />, href: "/categories", id: "categories" },
     { icon: <Info size={24} />, href: "/about", id: "about" },
     { icon: <Phone size={24} />, href: "/contact", id: "contact" },
   ];
@@ -53,26 +33,27 @@ export default function FloatingNav() {
   const [scrollDir, setScrollDir] = useState<"up" | "down">("up");
   const lastScrollY = useRef(0);
 
-  // Logo auto-rotate
+  // Cart count state
+  const [cartCount, setCartCount] = useState(0);
+
+  // Change logo every 10s
   useEffect(() => {
-    const interval = setInterval(
-      () => setLogoIndex((prev) => (prev + 1) % logos.length),
-      10000
-    );
+    const interval = setInterval(() => {
+      setLogoIndex((prev) => (prev + 1) % logos.length);
+    }, 10000);
     return () => clearInterval(interval);
   }, []);
 
-  // Scroll + active section logic
+  // Scroll direction + active section
   useEffect(() => {
     const handleScroll = () => {
       const currentY = window.scrollY;
       setScrollDir(currentY > lastScrollY.current ? "down" : "up");
       lastScrollY.current = currentY;
 
+      // Active section logic
       let currentSection = "home";
-      const sections = desktopLinks.map((link) =>
-        document.getElementById(link.id)
-      );
+      const sections = desktopLinks.map((link) => document.getElementById(link.id));
       sections.forEach((sec) => {
         if (sec && window.scrollY + 100 >= sec.offsetTop) {
           currentSection = sec.id;
@@ -85,7 +66,27 @@ export default function FloatingNav() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Magnetic hover
+  // Fetch cart count from backend
+  const fetchCartCount = async () => {
+    try {
+      const res = await fetch("/api/cart/count");
+      if (res.ok) {
+        const data = await res.json();
+        setCartCount(data.count || 0);
+      }
+    } catch (err) {
+      console.error("Failed to fetch cart count", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchCartCount();
+    // Poll every 15s
+    const interval = setInterval(fetchCartCount, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Magnetic hover effect
   const handleMouseMove = (e: React.MouseEvent, ref: HTMLAnchorElement) => {
     const rect = ref.getBoundingClientRect();
     const x = (e.clientX - rect.left - rect.width / 2) / 4;
@@ -94,17 +95,15 @@ export default function FloatingNav() {
   };
 
   const handleMouseLeave = (ref: HTMLAnchorElement) => {
-    ref.style.transform = "translate(0px,0px)";
+    ref.style.transform = `translate(0px,0px)`;
   };
 
   return (
     <>
-      {/* Desktop Navigation */}
+      {/* Desktop Nav */}
       <nav
         className={`hidden md:flex fixed left-4 top-1/2 -translate-y-1/2 flex-col items-start z-50 space-y-6 transition-transform duration-300 ${
-          scrollDir === "down"
-            ? "-translate-x-20 opacity-0"
-            : "translate-x-0 opacity-100"
+          scrollDir === "down" ? "-translate-x-20 opacity-0" : "translate-x-0 opacity-100"
         }`}
       >
         {/* Logo */}
@@ -153,32 +152,33 @@ export default function FloatingNav() {
           ))}
         </ul>
 
-        {/* Floating Cart with Count */}
-        <a href="/cart" className="relative mt-8">
+        {/* Cart Icon with count */}
+        <div className="relative mt-8">
           <ShoppingCart
-            size={30}
-            className="text-[#1C3B1C] drop-shadow-md hover:scale-110 transition-transform duration-200"
+            size={26}
+            className="text-[#1C3B1C] drop-shadow-md hover:scale-110 transition-transform duration-200 cursor-pointer"
+            onClick={() => (window.location.href = "/cart")}
           />
           {cartCount > 0 && (
-            <span className="absolute -top-2 -right-2 bg-[#3B5F36] text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
               {cartCount}
             </span>
           )}
-        </a>
+        </div>
       </nav>
 
-      {/* Mobile Navigation */}
+      {/* Mobile Nav */}
       <nav className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 flex justify-around w-[90%] bg-white/20 backdrop-blur-xl p-3 rounded-full shadow-lg z-50">
         {mobileLinks.map((link, idx) => (
           <motion.a
             key={idx}
             href={link.href}
             whileHover={{ scale: 1.2 }}
-            className="relative text-[#1C3B1C]"
+            className="text-[#1C3B1C] relative"
           >
             {link.icon}
-            {link.id === "cart" && cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-[#3B5F36] text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+            {link.id === "categories" && cartCount > 0 && (
+              <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center font-bold">
                 {cartCount}
               </span>
             )}
